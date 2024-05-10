@@ -1,8 +1,5 @@
 import numpy as np 
 
 class Neuron():
-    def __init__(self, numWeights):
-        # init weights going from this neuron to the next layer
-        self.weights = np.random.rand(1, numWeights)
-    
-    # anymore helper functions for the future 
+    def __init__(self, outWeights = 0, inWeights = 1) -> None:
+        self.weights = np.random.uniform(0.01, 1 / np.sqrt(inWeights), size=outWeights)
