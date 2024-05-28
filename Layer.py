@@ -3,7 +3,7 @@ from util import *
 
 
 class Layer:
-    def __init__(self, numNeurons, nextLayer, numPrev=1):
+    def __init__(self, prevNeurons, nextLayer):
         """
         Initializes random weights and biases according
         to the number of incoming and outgoing weights
@@ -13,18 +13,34 @@ class Layer:
         refers to the number of neurons in the previous layer.
         Thus, input layer will not have a weight or bias matrix.
         """
-        self.numNeurons = numNeurons
-        self.bias = np.random.uniform(0.01, 1 / np.sqrt(numPrev), size=numNeurons)
 
-        # This case is for the Output Layer, which has no next layer
+        # out weights = number of neurons in this layer
+        # in weights = number of neurons in previous layer
+
+        # Weight matrix
+        # num rows = self.nextLayer.prevNeurons (i.e. num neurons in this layer)
+        # num cols = prevNeurons (i.e num neurons in prev layer)
+
+        # Bias vector
+        # num rows = self.nextLayer.prevNeurons
+        # num cols = 1
+
+        self.prevNeurons = prevNeurons
+        self.bias = np.random.uniform(
+            0.01, 1 / np.sqrt(prevNeurons), size=nextLayer.prevNeurons
+        )
+
+        # This case is for the output Layer, which has no next layer
         if type(nextLayer) == int:
             self.weights = np.random.uniform(
-                0.01, 1 / np.sqrt(numPrev), size=(nextLayer, numNeurons)
+                0.01, 1 / np.sqrt(prevNeurons), size=(nextLayer, prevNeurons)
             )
         else:
             self.nextLayer = nextLayer
             self.weights = np.random.uniform(
-                0.01, 1 / np.sqrt(numPrev), size=(self.nextLayer.numNeurons, numNeurons)
+                0.01,
+                1 / np.sqrt(prevNeurons),
+                size=(self.nextLayer.prevNeurons, prevNeurons),
             )
 
     def activation(self, inp):
@@ -41,7 +57,7 @@ class Layer:
         """
         raise NotImplementedError
 
-    def forward(self):
+    def forward(self, inp):
         """
         This method will take in the previous layer's output
         vector (stochastic GD) and propagate it through the
@@ -78,19 +94,29 @@ class Input(Layer):
     bias vector and weight matrix. Values put in this
     constructor for numNeurons are inconsequential.
     """
+
     def __repr__(self) -> str:
-        return "Layer: Input\n" + \
-            f"Weights: None\n" + \
-            f"Bias: None\n" + \
-            "Next Layer: None"
+        return (
+            "Layer: Input\n" + f"Weights: None\n" + f"Bias: None\n" + "Next Layer: None"
+        )
 
-    def activation(self, inp):
+    def activation(self, inp: np.ndarray):
+        """
+        This method is trivial for the input layer, because 
+        there is no weight matrix to propagate the input 
+        through. 
+        """
         pass
 
-    def activationDeriv(self, inp):
+    def activationDeriv(self, inp: np.ndarray):
+        """
+        This method is trivial for the input layer, because 
+        there is no weight matrix to propagate the input 
+        through. 
+        """
         pass
 
-    def forward(self, inp):
+    def forward(self, inp: np.ndarray) -> np.ndarray:
         u = (self.nextLayer.weights @ inp) + self.nextLayer.bias
         o = self.nextLayer.activation(u)
         return u, o
@@ -126,12 +152,12 @@ class Hidden(Layer):
     def activationDeriv(self, inp):
         return sigmoidDeriv(inp)
 
-    def forward(self):
-        u = (self.nextLayer.weights @ self.inputVector) + self.nextLayer.bias
+    def forward(self, inp):
+        u = (self.nextLayer.weights @ inp) + self.nextLayer.bias
         o = self.nextLayer.activation(u)
         return u, o
 
-    def computeGradients(self, inputVector, error, prevOutput):
+    def computeGradients(self, inputVector, error, prevOutput) -> List[np.ndarray]:
         next_E = (self.nextLayer.weights.T @ error) * self.activationDeriv(inputVector)
         W_delta = next_E @ prevOutput.T
         B_delta = next_E

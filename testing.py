@@ -2,12 +2,9 @@
 from util import * 
 import numpy as np 
 
-neuron_1 = Neuron(outWeights=2)
-neuron_2 = Neuron(outWeights=2)
+a = np.random.rand(10)
+aN = softmax(a)
 
-input_layer = [neuron_1, neuron_2]
-
-print(neuron_1)
-print(neuron_2)
-print()
-print(getWeightMatrix(input_layer))
+print(a)
+print(aN)
+print(np.argmax(aN))
