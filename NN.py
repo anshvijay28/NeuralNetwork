@@ -71,9 +71,10 @@ class NN:
         """
         This method will run train the neural network in order
         to achieve weights and biases that yield the least amount
-        of loss.
+        of loss. This method will return the accuracy of the model.
         """
         N = len(self.inputs)
+        correct = 0
         for i in range(N):
             outs = self.feedforward(inp=self.inputs[i])
             self.backPropagation(outs=outs, target=self.outputs[i])
