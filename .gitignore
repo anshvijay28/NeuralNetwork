@@ -1,7 +1,12 @@
+# Datasets
+mnist_test.csv
+mnist_train.csv 
+data/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+.vscode/
 
 # C extensions
 *.so

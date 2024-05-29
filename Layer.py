@@ -11,7 +11,9 @@ class Layer:
 
         Note: because of implementation details, numNeurons
         refers to the number of neurons in the previous layer.
-        Thus, input layer will not have a weight or bias matrix.
+        For for layer i, its weight/bias matrix will refer to
+        the weights connecting layer i - 1 and i. Thus, input
+        layer will not have a weight or bias matrix.
         """
 
         # out weights = number of neurons in this layer
@@ -26,14 +28,13 @@ class Layer:
         # num cols = 1
 
         self.prevNeurons = prevNeurons
-        self.bias = np.random.uniform(
-            0.01, 1 / np.sqrt(prevNeurons), size=nextLayer.prevNeurons
-        )
-
         # This case is for the output Layer, which has no next layer
         if type(nextLayer) == int:
             self.weights = np.random.uniform(
                 0.01, 1 / np.sqrt(prevNeurons), size=(nextLayer, prevNeurons)
+            )
+            self.bias = np.random.uniform(
+                0.01, 1 / np.sqrt(prevNeurons), size=(nextLayer, 1)
             )
         else:
             self.nextLayer = nextLayer
@@ -41,6 +42,9 @@ class Layer:
                 0.01,
                 1 / np.sqrt(prevNeurons),
                 size=(self.nextLayer.prevNeurons, prevNeurons),
+            )
+            self.bias = np.random.uniform(
+                0.01, 1 / np.sqrt(prevNeurons), size=(nextLayer.prevNeurons, 1)
             )
 
     def activation(self, inp):
@@ -63,7 +67,12 @@ class Layer:
         vector (stochastic GD) and propagate it through the
         NN.
         """
-        raise NotImplementedError
+        u = self.nextLayer.weights @ inp
+        if len(u.shape) == 1:
+            u = u[..., np.newaxis]
+        u += self.nextLayer.bias
+        o = self.nextLayer.activation(u)
+        return u, o
 
     def computeGradients(self, inputVector, error, prevOutput):
         """
@@ -97,29 +106,27 @@ class Input(Layer):
 
     def __repr__(self) -> str:
         return (
-            "Layer: Input\n" + f"Weights: None\n" + f"Bias: None\n" + "Next Layer: None"
+            "Layer: Input\n"
+            + f"Weights: None\n"
+            + f"Bias: None\n"
+            + "Next Layer: None\n"
         )
 
     def activation(self, inp: np.ndarray):
         """
-        This method is trivial for the input layer, because 
-        there is no weight matrix to propagate the input 
-        through. 
+        This method is trivial for the input layer, because
+        there is no weight matrix to propagate the input
+        through.
         """
         pass
 
     def activationDeriv(self, inp: np.ndarray):
         """
-        This method is trivial for the input layer, because 
-        there is no weight matrix to propagate the input 
-        through. 
+        This method is trivial for the input layer, because
+        there is no weight matrix to propagate the input
+        through.
         """
         pass
-
-    def forward(self, inp: np.ndarray) -> np.ndarray:
-        u = (self.nextLayer.weights @ inp) + self.nextLayer.bias
-        o = self.nextLayer.activation(u)
-        return u, o
 
     def computeGradients(self, inputVector, error, prevOutput):
         """
@@ -137,13 +144,18 @@ class Hidden(Layer):
     """
 
     def __repr__(self) -> str:
+        if type(self.nextLayer) == int:
+            return (
+                "Layer: Hidden\n"
+                + f"Weight Shape: {self.weights.shape}\n"
+                + f"Bias Shape: {self.bias.shape}\n"
+                + f"Next Layer: Output\n"
+            )
         return (
             "Layer: Hidden\n"
             + f"Weight Shape: {self.weights.shape}\n"
             + f"Bias Shape: {self.bias.shape}\n"
-            + f"Next Layer: Output"
-            if type(self.nextLayer) == int
-            else f"Next Layer: Hidden"
+            + f"Next Layer: Hidden\n"
         )
 
     def activation(self, inp):
@@ -151,11 +163,6 @@ class Hidden(Layer):
 
     def activationDeriv(self, inp):
         return sigmoidDeriv(inp)
-
-    def forward(self, inp):
-        u = (self.nextLayer.weights @ inp) + self.nextLayer.bias
-        o = self.nextLayer.activation(u)
-        return u, o
 
     def computeGradients(self, inputVector, error, prevOutput) -> List[np.ndarray]:
         next_E = (self.nextLayer.weights.T @ error) * self.activationDeriv(inputVector)
@@ -176,7 +183,7 @@ class Output(Layer):
             "Layer: Output\n"
             + f"Weight Shape: {self.weights.shape}\n"
             + f"Bias Shape: {self.bias.shape}\n"
-            + "Next Layer: None"
+            + "Next Layer: None\n"
         )
 
     def activation(self, inp):
