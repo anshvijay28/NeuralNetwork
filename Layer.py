@@ -16,17 +16,6 @@ class Layer:
         layer will not have a weight or bias matrix.
         """
 
-        # out weights = number of neurons in this layer
-        # in weights = number of neurons in previous layer
-
-        # Weight matrix
-        # num rows = self.nextLayer.prevNeurons (i.e. num neurons in this layer)
-        # num cols = prevNeurons (i.e num neurons in prev layer)
-
-        # Bias vector
-        # num rows = self.nextLayer.prevNeurons
-        # num cols = 1
-
         self.prevNeurons = prevNeurons
         # This case is for the output Layer, which has no next layer
         if type(nextLayer) == int:

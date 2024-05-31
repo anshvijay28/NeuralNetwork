@@ -47,7 +47,7 @@ def compute_output_vector(output: int) -> List[int]:
     return [0.99 if i == output else 0.01 for i in range(10)]
 
 def compute_clean_data(path: str) -> Tuple[np.ndarray, np.ndarray]:
-    dataset = open("data/mnist_train_100.csv", "r")
+    dataset = open(path, "r")
     data = dataset.readlines()
     dataset.close()
 

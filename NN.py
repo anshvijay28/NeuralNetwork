@@ -19,8 +19,8 @@ class NN:
         self.alpha = alpha
         self.train_X = train_X
         self.train_Y = train_Y
-        self.test_X = test_X
-        self.test_Y = test_Y
+        self.test_X = test_X  # take this out
+        self.test_Y = test_Y  # take this out
         self.inp, self.h1, self.h2, self.out = numNeurons
         self.outputLayer = Output(prevNeurons=self.h2, nextLayer=self.out)
         self.hiddenLayer2 = Hidden(prevNeurons=self.h1, nextLayer=self.outputLayer)
@@ -95,7 +95,7 @@ class NN:
             self.backPropagation(outs=outs, target=self.train_Y[i])
             if (i + 1) % 100 == 0:
                 loss = cross_entropy_loss(target=self.train_Y[i], output=outs[-1])
-                print(f"Loss on iteration {i} = {loss}")
+                print(f"Loss on iteration {i + 1} = {loss}")
 
     def test(self) -> None:
         """
@@ -106,6 +106,8 @@ class NN:
         correct = 0
         for i in range(N):
             yh = self.predict(self.test_X[i])
-            if np.argmax(self.test_Y) == yh:
+            y = np.argmax(self.test_Y[i])
+            # print(f"yh = {yh}, y = {y}")
+            if y == yh:
                 correct += 1
         print(f"Accuracy on test data is {correct / N}")
