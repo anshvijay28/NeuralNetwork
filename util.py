@@ -12,7 +12,10 @@ def sigmoidDeriv(nums: np.ndarray) -> np.ndarray:
 
 
 def softmax(nums: np.ndarray) -> np.ndarray:
-    return np.exp(nums) / np.sum(np.exp(nums))
+    if len(nums.shape) == 1:
+        nums = nums[..., np.newaxis]
+    max_subtracted = nums - np.max(nums, axis=0, keepdims=True) # prevent overflow 
+    return np.exp(max_subtracted) / np.sum(np.exp(max_subtracted), axis=0, keepdims=True)
 
 
 def softmaxDeriv(target: np.ndarray, output: np.ndarray) -> np.ndarray:

@@ -1,5 +1,6 @@
 import numpy as np
 from util import *
+from typing import List, Tuple
 from Layer import Input, Hidden, Output
 
 
@@ -8,10 +9,10 @@ class NN:
         self,
         numNeurons: List[int],
         alpha: float,
-        train_X: np.ndarray,  # (N, 784)
-        train_Y: np.ndarray,  # (N, 10)
-        test_X: np.ndarray,  # (M, 784)
-        test_Y: np.ndarray,  # (M, 10)
+        train_X: np.ndarray = None,  # (N, 784)
+        train_Y: np.ndarray = None,  # (N, 10)
+        test_X: np.ndarray = None,
+        test_Y: np.ndarray = None,
     ) -> None:
         """
         Initializes a 4 layered Neural Network
@@ -19,8 +20,8 @@ class NN:
         self.alpha = alpha
         self.train_X = train_X
         self.train_Y = train_Y
-        self.test_X = test_X  # take this out
-        self.test_Y = test_Y  # take this out
+        self.test_X = test_X
+        self.test_Y = test_Y
         self.inp, self.h1, self.h2, self.out = numNeurons
         self.outputLayer = Output(prevNeurons=self.h2, nextLayer=self.out)
         self.hiddenLayer2 = Hidden(prevNeurons=self.h1, nextLayer=self.outputLayer)
@@ -37,7 +38,7 @@ class NN:
 
     def feedforward(self, inp: np.ndarray) -> List[np.ndarray]:
         """
-        This method will take 1 input from self.inputs
+        feedforward will take 1 input from self.inputs
         and predict the output using current weights of
         the network.
         """
@@ -73,41 +74,83 @@ class NN:
         self.hiddenLayer2.update(W_delta=W2_delta, B_delta=B2_delta, alpha=self.alpha)
         self.hiddenLayer1.update(W_delta=W1_delta, B_delta=B1_delta, alpha=self.alpha)
 
-    def predict(self, inp: np.ndarray) -> int:
+    def predict(self, inp: np.ndarray) -> Tuple[np.ndarray, float]:
         """
-        This method will take an input from the test dataset
-        and output a prediction based on the learned weights
+        Makes a prediction based on the learned weights
         and biases from training.
         """
         _, _, _, _, _, _, o3 = self.feedforward(inp)
 
-        return np.argmax(o3)
+        return o3, np.argmax(o3)
 
-    def train(self) -> None:
+    def train(self) -> List[float]:
         """
-        This method will run train the neural network in order
-        to achieve weights and biases that yield the least amount
-        of loss. This method will return the accuracy of the model.
+        Trains the neural network in order to achieve weights and
+        biases that yield the least amount of loss. This method will
+        return the accuracy of the model.
         """
+        losses = []
         N = len(self.train_X)
         for i in range(N):
             outs = self.feedforward(inp=self.train_X[i])
             self.backPropagation(outs=outs, target=self.train_Y[i])
-            if (i + 1) % 100 == 0:
-                loss = cross_entropy_loss(target=self.train_Y[i], output=outs[-1])
+            loss = cross_entropy_loss(target=self.train_Y[i], output=outs[-1])
+            losses.append(loss)
+            if (i + 1) % 10000 == 0:
                 print(f"Loss on iteration {i + 1} = {loss}")
+        return losses
 
-    def test(self) -> None:
+    def setTestData(self, test_X, test_Y) -> None:
+        """
+        Allow user to change test data outside the constructor.
+        """
+        self.test_X = test_X
+        self.test_Y = test_Y
+
+    def setTrainData(self, train_X, train_Y) -> None:
+        """
+        Allow user to change train data outside the constructor.
+        """
+        self.train_X = train_X
+        self.train_Y = train_Y
+
+    def setAlpha(self, new_alpha) -> None:
+        """
+        Allow user to change learning rate between training
+        and testing loops.
+        """
+        self.alpha = new_alpha
+
+    def randomizeWeights(self) -> None:
+        """
+        Randomizes weights and biases of all layers.
+        """
+        prevN_Inp, nextL_Inp = self.inputLayer.prevNeurons, self.inputLayer.nextLayer
+        prevN_H1, nextL_H1 = self.hiddenLayer1.prevNeurons, self.hiddenLayer1.nextLayer
+        prevN_H2, nextL_H2 = self.hiddenLayer2.prevNeurons, self.hiddenLayer2.nextLayer
+        prevN_O, nextL_O = self.outputLayer.prevNeurons, self.outputLayer.nextLayer
+
+        self.inputLayer.randomizeWeights(prevN_Inp, nextL_Inp)
+        self.hiddenLayer1.randomizeWeights(prevN_H1, nextL_H1)
+        self.hiddenLayer2.randomizeWeights(prevN_H2, nextL_H2)
+        self.outputLayer.randomizeWeights(prevN_O, nextL_O)
+
+    def test(self) -> Tuple[float, float]:
         """
         Runs trained model on test dataset and outputs
         model's accuracy.
         """
         N = len(self.test_X)
         correct = 0
+        total_loss = 0
         for i in range(N):
-            yh = self.predict(self.test_X[i])
+            output, yh = self.predict(self.test_X[i])
             y = np.argmax(self.test_Y[i])
-            # print(f"yh = {yh}, y = {y}")
+            total_loss += cross_entropy_loss(self.test_Y[i], output)
             if y == yh:
                 correct += 1
-        print(f"Accuracy on test data is {correct / N}")
+        accuracy = correct / N
+        loss = total_loss / N
+        print(f"Accuracy = {accuracy}")
+        print(f"Average loss = {loss}")
+        return accuracy, loss

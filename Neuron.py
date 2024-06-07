@@ -7,7 +7,7 @@ m neurons in each layer, and j layers, then this leads to
 an O(mnj) ==> O(n^3) time complexity. Separating the neural 
 network into layers rather than neurons allows us to skip
 the O(n^3) time complexity entirely because each layer has 
-a .weights (type == np.ndarray) attribute. The only time 
+a .weights (np.ndarray) attribute. The only time 
 overhead is from matrix multiplication, which I'm pretty 
 sure has no alternative.
 """

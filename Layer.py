@@ -5,35 +5,41 @@ from util import *
 class Layer:
     def __init__(self, prevNeurons, nextLayer):
         """
+        Separate method defined for randomizing weights
+        to allow for re-randomization of weights when
+        trying to find optimal learning rate or other
+        hyperparameters.
+        """
+        self.randomizeWeights(prevNeurons, nextLayer)
+
+    def randomizeWeights(self, prevNeurons, nextLayer) -> None:
+        """
         Initializes random weights and biases according
         to the number of incoming and outgoing weights
         for each neuron.
 
-        Note: because of implementation details, numNeurons
-        refers to the number of neurons in the previous layer.
-        For for layer i, its weight/bias matrix will refer to
-        the weights connecting layer i - 1 and i. Thus, input
-        layer will not have a weight or bias matrix.
+        Note: For for layer i, its weight/bias matrix will
+        refer to the weights connecting layer i - 1 and i.
+        Thus, input layer's weight or bias matrix will not
+        be used.
         """
-
         self.prevNeurons = prevNeurons
-        # This case is for the output Layer, which has no next layer
+        self.nextLayer = nextLayer
+        bound = (1 / np.sqrt(prevNeurons)) * 10
+        # Xavier Weight Initialization
         if type(nextLayer) == int:
             self.weights = np.random.uniform(
-                0.01, 1 / np.sqrt(prevNeurons), size=(nextLayer, prevNeurons)
+                -bound, bound, size=(nextLayer, prevNeurons)
             )
-            self.bias = np.random.uniform(
-                0.01, 1 / np.sqrt(prevNeurons), size=(nextLayer, 1)
-            )
+            self.bias = np.random.uniform(-bound, bound, size=(nextLayer, 1))
         else:
-            self.nextLayer = nextLayer
             self.weights = np.random.uniform(
-                0.01,
-                1 / np.sqrt(prevNeurons),
+                -bound,
+                bound,
                 size=(self.nextLayer.prevNeurons, prevNeurons),
             )
             self.bias = np.random.uniform(
-                0.01, 1 / np.sqrt(prevNeurons), size=(nextLayer.prevNeurons, 1)
+                -bound, bound, size=(nextLayer.prevNeurons, 1)
             )
 
     def activation(self, inp):
@@ -52,9 +58,10 @@ class Layer:
 
     def forward(self, inp):
         """
-        This method will take in the previous layer's output
-        vector (stochastic GD) and propagate it through the
-        NN.
+        Takes in the previous layer's output vector and
+        propagates it through the NN. Because of how this
+        Neural Network was implemented, the next layer's
+        activation function will be used.
         """
         u = self.nextLayer.weights @ inp
         if len(u.shape) == 1:
@@ -69,15 +76,15 @@ class Layer:
         the error propagated to this layer, weights of the
         next layer, and the previous layer's output vector in
         order to calculate the deltas for each weight of this
-        layer.
+        layer. Used during backpropagation.
         """
         raise NotImplementedError
 
     def update(self, W_delta, B_delta, alpha):
         """
-        This method will update this layer's weights and bias vector
-        according to the learning rate and the deltas calculated
-        during backpropagation.
+        Updates layer's weights and biases according to the
+        learning rate and the deltas calculated during
+        backpropagation. Used during backpropagation.
         """
         self.weights -= alpha * W_delta
         self.bias -= alpha * B_delta
@@ -88,9 +95,11 @@ class Input(Layer):
     Input Layer to a 4 layered neural network using
     Sigmoid for the activation function.
 
-    This layer actually doesn't actually "own" a
-    bias vector and weight matrix. Values put in this
-    constructor for numNeurons are inconsequential.
+    This layer technically has a weight and bias matrix,
+    but it is not used since these weights would be
+    connecting the input layer and the layer previous to
+    the input layer, which does not exist. Values put in
+    this constructor are inconsequential.
     """
 
     def __repr__(self) -> str:
@@ -103,25 +112,27 @@ class Input(Layer):
 
     def activation(self, inp: np.ndarray):
         """
-        This method is trivial for the input layer, because
-        there is no weight matrix to propagate the input
+        An activation function is trivial for the input layer,
+        because there is no weight matrix to propagate the input
         through.
         """
         pass
 
     def activationDeriv(self, inp: np.ndarray):
         """
-        This method is trivial for the input layer, because
-        there is no weight matrix to propagate the input
-        through.
+        Just like the activation function, the activationDeriv
+        function trivial for the input layer, because there is
+        no weight matrix to propagate the input through in the
+        first place.
         """
         pass
 
     def computeGradients(self, inputVector, error, prevOutput):
         """
-        This method is trivial for the input layer, because
-        layer one's weights logically belong to the 1st hidden
-        layer.
+        There is no need for the input layer to have to compute
+        gradients, because, in this implementation, the weight
+        matrix belonging to the input layer connect layers one
+        and zero. There is no layer zero.
         """
         pass
 
