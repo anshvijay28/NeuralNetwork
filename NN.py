@@ -83,22 +83,22 @@ class NN:
 
         return o3, np.argmax(o3)
 
-    def train(self) -> List[float]:
+    def train(self, show_loss: bool = True) -> float:
         """
         Trains the neural network in order to achieve weights and
         biases that yield the least amount of loss. This method will
         return the accuracy of the model.
         """
-        losses = []
+        total_loss = 0
         N = len(self.train_X)
         for i in range(N):
             outs = self.feedforward(inp=self.train_X[i])
             self.backPropagation(outs=outs, target=self.train_Y[i])
             loss = cross_entropy_loss(target=self.train_Y[i], output=outs[-1])
-            losses.append(loss)
-            if (i + 1) % 10000 == 0:
+            total_loss += loss
+            if show_loss and (i + 1) % 10000 == 0:
                 print(f"Loss on iteration {i + 1} = {loss}")
-        return losses
+        return total_loss / N
 
     def setTestData(self, test_X, test_Y) -> None:
         """
@@ -150,7 +150,5 @@ class NN:
             if y == yh:
                 correct += 1
         accuracy = correct / N
-        loss = total_loss / N
         print(f"Accuracy = {accuracy}")
-        print(f"Average loss = {loss}")
-        return accuracy, loss
+        return accuracy

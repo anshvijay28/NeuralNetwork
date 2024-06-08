@@ -65,3 +65,10 @@ def compute_clean_data(path: str) -> Tuple[np.ndarray, np.ndarray]:
         Y.append(compute_output_vector(y))
 
     return np.asarray(X), np.asarray(Y)
+
+def randomize_order(X: np.ndarray, Y: np.ndarray):
+    X_len = X.shape[1]
+    combined_data_set = np.concatenate((X, Y), axis=1)
+    np.random.shuffle(combined_data_set)
+    rand_X, rand_Y = combined_data_set[:, :X_len], combined_data_set[:, X_len:]
+    return rand_X, rand_Y
