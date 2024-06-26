@@ -96,7 +96,7 @@ class NN:
             self.backPropagation(outs=outs, target=self.train_Y[i])
             loss = cross_entropy_loss(target=self.train_Y[i], output=outs[-1])
             total_loss += loss
-            if show_loss and (i + 1) % 10000 == 0:
+            if show_loss and (i + 1) % (N // 6) == 0:
                 print(f"Loss on iteration {i + 1} = {loss}")
         return total_loss / N
 
