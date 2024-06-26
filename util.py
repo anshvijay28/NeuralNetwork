@@ -14,8 +14,10 @@ def sigmoidDeriv(nums: np.ndarray) -> np.ndarray:
 def softmax(nums: np.ndarray) -> np.ndarray:
     if len(nums.shape) == 1:
         nums = nums[..., np.newaxis]
-    max_subtracted = nums - np.max(nums, axis=0, keepdims=True) # prevent overflow 
-    return np.exp(max_subtracted) / np.sum(np.exp(max_subtracted), axis=0, keepdims=True)
+    max_subtracted = nums - np.max(nums, axis=0, keepdims=True)  # prevent overflow
+    return np.exp(max_subtracted) / np.sum(
+        np.exp(max_subtracted), axis=0, keepdims=True
+    )
 
 
 def softmaxDeriv(target: np.ndarray, output: np.ndarray) -> np.ndarray:
@@ -43,13 +45,15 @@ def convert_string_to_vector(data: str) -> List[int]:
 
 
 def scale_vector(data: List[int]) -> List[int]:
-    return [n / 255.0 * 0.99 + 0.01 for n in data]
+    mx = max(data) + min(data)
+    return [round(n / mx * 0.99 + 0.01, 2) for n in data]
 
 
 def compute_output_vector(output: int) -> List[int]:
     return [0.99 if i == output else 0.01 for i in range(10)]
 
-def compute_clean_data(path: str) -> Tuple[np.ndarray, np.ndarray]:
+
+def compute_clean_data(path: str, scale: bool = True) -> Tuple[np.ndarray, np.ndarray]:
     dataset = open(path, "r")
     data = dataset.readlines()
     dataset.close()
@@ -59,12 +63,15 @@ def compute_clean_data(path: str) -> Tuple[np.ndarray, np.ndarray]:
 
     for d in data:
         d = convert_string_to_vector(d)
-        x, y = d[1: ], d[0]
-
-        X.append(scale_vector(x))
+        x, y = d[1:], d[0]
+        if scale:
+            X.append(scale_vector(x))
+        else:
+            X.append(x)
         Y.append(compute_output_vector(y))
 
     return np.asarray(X), np.asarray(Y)
+
 
 def randomize_order(X: np.ndarray, Y: np.ndarray):
     X_len = X.shape[1]
